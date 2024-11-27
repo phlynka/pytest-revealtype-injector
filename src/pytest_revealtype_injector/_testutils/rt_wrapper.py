@@ -19,9 +19,11 @@ class RevealTypeExtractor(ast.NodeVisitor):
     target = None
 
     def visit_Call(self, node: ast.Call) -> _t.Any:
-        func_name = node.func
-        if isinstance(func_name, ast.Name) and func_name.id == "reveal_type":
-            self.target = node.args[0]
+        # Condition no more holds, as we allow importing reveal_type() or typing
+        # module as any name
+        # func_name = node.func
+        # if isinstance(func_name, ast.Name) and func_name.id == "reveal_type":
+        self.target = node.args[0]
         return self.generic_visit(node)
 
 
