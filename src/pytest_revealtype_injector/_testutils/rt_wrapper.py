@@ -2,6 +2,7 @@ import ast
 import inspect
 import logging
 import pathlib
+import sys
 import typing as _t
 
 from typeguard import TypeCheckError, TypeCheckMemo, check_type_internal
@@ -27,7 +28,7 @@ class RevealTypeExtractor(ast.NodeVisitor):
         return self.generic_visit(node)
 
 
-def _get_var_name(frame: inspect.FrameInfo) -> str | None:
+def _get_var_name(frame: inspect.Traceback) -> str | None:
     ctxt, idx = frame.code_context, frame.index
     assert ctxt is not None and idx is not None
     code = ctxt[idx].strip()
@@ -74,14 +75,15 @@ def reveal_type_wrapper(var: _T) -> _T:
     `typeguard.TypeCheckError`
         If type checker result doesn't match runtime result
     """
-    caller = inspect.stack()[1]
+    caller_frame = sys._getframe(1)
+    caller = inspect.getframeinfo(caller_frame)
     var_name = _get_var_name(caller)
     pos = FilePos(pathlib.Path(caller.filename).name, caller.lineno)
 
     # Since this routine is a wrapper of typeguard.check_type(),
     # get globals and locals from my caller, not mine
-    globalns = caller.frame.f_globals
-    localns = caller.frame.f_locals
+    globalns = caller_frame.f_globals
+    localns = caller_frame.f_locals
 
     for adapter in (pyright_adapter.adapter, mypy_adapter.adapter):
         try:
