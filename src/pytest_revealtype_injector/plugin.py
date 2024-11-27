@@ -35,9 +35,7 @@ def pytest_pyfunc_call(pyfuncitem: pytest.Function) -> None:
                 continue
             assert hasattr(item, "reveal_type")
             setattr(item, "reveal_type", reveal_type_wrapper)
-            _logger.info(
-                f"Replaced {name}.reveal_type() with {reveal_type_wrapper}"
-            )
+            _logger.info(f"Replaced {name}.reveal_type() with {reveal_type_wrapper}")
             continue
 
 
