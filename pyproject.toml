@@ -1,0 +1,125 @@
+#:schema https://json.schemastore.org/pyproject.json
+
+[build-system]
+requires = ['flit_core ~= 3.4']
+build-backend = 'flit_core.buildapi'
+
+[project]
+name = 'pytest-revealtype-injector'
+dynamic = ['version', 'description']
+readme = 'README.md'
+requires-python = '>=3.10'
+license = {text = 'MIT'}
+dependencies = [
+    'mypy >= 1.11.2',
+    'pyright ~= 1.1',
+    'pytest >= 7.0',
+    'typeguard ~= 4.3'
+]
+keywords = [
+    'pytest',
+    'typing',
+    'types',
+    'stub',
+    'stubs',
+    'static-typing',
+    'dynamic-typing',
+    'type-checking',
+    'annotation',
+    'reveal_type',
+]
+authors = [
+    { name = 'Abel Cheung', email = 'abelcheung@gmail.com' }
+]
+classifiers = [
+    'Development Status :: 4 - Beta',
+    'Programming Language :: Python',
+    'Intended Audience :: Developers',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
+    'License :: OSI Approved :: MIT License',
+    'Topic :: Software Development :: Testing',
+    'Typing :: Typed',
+]
+
+[project.urls]
+homepage = 'https://github.com/abelcheung/pytest-revealtype-injector'
+
+[project.optional-dependencies]
+typechecker = [
+    'mypy >= 1.11.2',
+    'pyright ~= 1.1',
+]
+
+[project.entry-points.pytest11]
+pytest-revealtype-injector = "pytest_revealtype_injector.plugin"
+
+[tool.flit.module]
+name = 'pytest_revealtype_injector'
+
+[tool.pyright]
+typeCheckingMode = 'strict'
+enableTypeIgnoreComments = false
+
+[tool.mypy]
+mypy_path = "$MYPY_CONFIG_FILE_DIR/src"
+packages = "pytest_revealtype_injector"
+strict = true
+
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.format]
+preview = true
+
+[tool.ruff.lint]
+select = [
+    'E',
+    'F',
+    'I',
+]
+task-tags = [
+    "BUG",
+    "DEBUG",
+    "FIX",
+    "FIXME",
+    "HACK",
+    "IDEA",
+    "NOTE",
+    "OPTIMIZE",
+    "REVIEW",
+    "TODO",
+    "UGLY",
+    "XXX",
+]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = [
+    "--tb=short",
+    "--import-mode=importlib",
+]
+markers = [
+    "slow: marks tests as slow",
+]
+testpaths = [
+    "tests",
+]
+
+[tool.semantic_release]
+build_command = """
+    pip install build && python -m build
+"""
+commit_message = 'chore(release): bump version to {version}'
+version_variables = ['src/pytest_revealtype_injector/__init__.py:__version__']
+
+[tool.semantic_release.commit_parser_options]
+minor_tags = ['feat']
+patch_tags = ['fix', 'perf', 'docs', 'chore']

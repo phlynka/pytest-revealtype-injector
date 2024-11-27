@@ -106,7 +106,7 @@ def reveal_type_wrapper(var: _T) -> _T:
         ref = tc_result.type
         try:
             _ = eval(ref.__forward_arg__, globalns, localns)
-        except:
+        except NameError:
             ref_ast = ast.parse(ref.__forward_arg__, mode="eval")
             walker = adapter.create_collector(globalns, localns)
             new_ast = walker.visit(ref_ast)
