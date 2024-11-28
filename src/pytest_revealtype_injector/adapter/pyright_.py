@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import typing as _t
 
-from .common import FilePos, NameCollectorBase, TypeCheckerAdapterBase, VarType
+from ..models import FilePos, NameCollectorBase, TypeCheckerAdapterBase, VarType
 
 
 class _NameCollector(NameCollectorBase):

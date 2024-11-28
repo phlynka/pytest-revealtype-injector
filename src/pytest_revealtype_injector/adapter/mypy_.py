@@ -3,11 +3,20 @@ import importlib
 import json
 import pathlib
 import re
-import typing as _t
+from collections.abc import (
+    Iterable,
+    TypedDict,
+)
+from typing import (
+    Any,
+    ForwardRef,
+    Literal,
+    cast,
+)
 
 import mypy.api
 
-from .common import (
+from ..models import (
     FilePos,
     NameCollectorBase,
     TypeCheckerAdapterBase,
@@ -18,10 +27,10 @@ from .common import (
 
 # There are "column", "hint" and "code" fields for error
 # messages, but not in reveal_type() output
-class _MypyDiagObj(_t.TypedDict):
+class _MypyDiagObj(TypedDict):
     file: str
     line: int
-    severity: _t.Literal["note", "warning", "error"]
+    severity: Literal["note", "warning", "error"]
     message: str
 
 
@@ -99,7 +108,7 @@ class _NameCollector(NameCollectorBase):
     def visit_BinOp(self, node: ast.BinOp) -> ast.expr:
         if isinstance(node.op, ast.MatMult) and isinstance(node.right, ast.Constant):
             # Mypy disallows returning Any
-            return _t.cast("ast.expr", self.visit(node.left))
+            return cast("ast.expr", self.visit(node.left))
         # For expression that haven't been accounted for, just don't
         # process and allow name resolution to fail
         return node
@@ -111,7 +120,7 @@ class _TypeCheckerAdapter(TypeCheckerAdapterBase):
     _type_mesg_re = re.compile(r'^Revealed type is "(?P<type>.+?)"$')
 
     @classmethod
-    def run_typechecker_on(cls, paths: _t.Iterable[pathlib.Path]) -> None:
+    def run_typechecker_on(cls, paths: Iterable[pathlib.Path]) -> None:
         this_file = pathlib.Path(__file__).resolve()
         mypy_ini = this_file.parent.parent / "rttest-mypy.ini"
         if not mypy_ini.is_file():
@@ -152,11 +161,11 @@ class _TypeCheckerAdapter(TypeCheckerAdapterBase):
             # usable for evaluation
             expression = m["type"].translate({ord(c): None for c in "*?="})
             # Unlike pyright, mypy output doesn't contain variable name
-            cls.typechecker_result[pos] = VarType(None, _t.ForwardRef(expression))
+            cls.typechecker_result[pos] = VarType(None, ForwardRef(expression))
 
     @classmethod
     def create_collector(
-        cls, globalns: dict[str, _t.Any], localns: dict[str, _t.Any]
+        cls, globalns: dict[str, Any], localns: dict[str, Any]
     ) -> _NameCollector:
         return _NameCollector(globalns, localns)
 

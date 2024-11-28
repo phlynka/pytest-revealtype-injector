@@ -7,8 +7,8 @@ import typing as _t
 
 from typeguard import TypeCheckError, TypeCheckMemo, check_type_internal
 
-from . import mypy_adapter, pyright_adapter
-from .common import FilePos, TypeCheckerError, VarType
+from .adapter import mypy_, pyright_
+from .models import FilePos, TypeCheckerError, VarType
 
 _T = _t.TypeVar("_T")
 
@@ -75,17 +75,17 @@ def reveal_type_wrapper(var: _T) -> _T:
     `typeguard.TypeCheckError`
         If type checker result doesn't match runtime result
     """
+    # As a wrapper of typeguard.check_type_interal(),
+    # get data from my caller, not mine
     caller_frame = sys._getframe(1)
     caller = inspect.getframeinfo(caller_frame)
     var_name = _get_var_name(caller)
     pos = FilePos(pathlib.Path(caller.filename).name, caller.lineno)
 
-    # Since this routine is a wrapper of typeguard.check_type(),
-    # get globals and locals from my caller, not mine
     globalns = caller_frame.f_globals
     localns = caller_frame.f_locals
 
-    for adapter in (pyright_adapter.adapter, mypy_adapter.adapter):
+    for adapter in (pyright_.adapter, mypy_.adapter):
         try:
             tc_result = adapter.typechecker_result[pos]
         except KeyError as e:

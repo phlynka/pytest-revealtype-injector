@@ -5,19 +5,14 @@ import ast
 import importlib
 import pathlib
 import re
-from dataclasses import dataclass
+from collections.abc import Iterable
 from typing import (
     Any,
     ClassVar,
     ForwardRef,
-    Iterable,
     NamedTuple,
     cast,
-    get_args,
-    get_type_hints,
 )
-
-from . import strategy as _st
 
 
 class FilePos(NamedTuple):
@@ -101,20 +96,3 @@ class TypeCheckerAdapterBase:
     def create_collector(
         cls, globalns: dict[str, Any], localns: dict[str, Any]
     ) -> NameCollectorBase: ...
-
-
-@dataclass
-class ArgumentTypes:
-    allow: tuple[type[Any], ...]
-    skip: tuple[type[Any], ...]
-
-
-attr_name_types = ArgumentTypes(
-    get_args(get_args(get_type_hints(_st.xml_name_arg)["return"])[0]),
-    (),
-)
-
-attr_value_types = ArgumentTypes(
-    get_args(get_args(get_type_hints(_st.xml_attr_value_arg)["return"])[0]),
-    (),
-)

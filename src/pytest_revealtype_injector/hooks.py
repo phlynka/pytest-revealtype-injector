@@ -5,8 +5,8 @@ import logging
 
 import pytest
 
-from ._testutils import mypy_adapter, pyright_adapter
-from ._testutils.rt_wrapper import reveal_type_wrapper
+from .adapter import mypy_, pyright_
+from .main import reveal_type_wrapper
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
@@ -41,5 +41,5 @@ def pytest_pyfunc_call(pyfuncitem: pytest.Function) -> None:
 
 def pytest_collection_finish(session: pytest.Session) -> None:
     files = {i.path for i in session.items}
-    for adapter in (pyright_adapter.adapter, mypy_adapter.adapter):
+    for adapter in (pyright_.adapter, mypy_.adapter):
         adapter.run_typechecker_on(files)
