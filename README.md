@@ -34,7 +34,11 @@ import typing as typ  # or...
 from typing import reveal_type as rt
 ```
 
-But there is one caveat. This plugin only searches for global import in test files, so local import inside test function doesn't work. That means following code doesn't utilize this plugin at all:
+### Limitations
+
+But there are 2 caveats.
+
+1. This plugin only searches for global import in test files, so local import inside test function doesn't work. That means following code doesn't utilize this plugin at all:
 
 ```python
 def test_something():
@@ -42,6 +46,8 @@ def test_something():
     x = 1
     reveal_type(x)  # calls vanilla reveal_type()
 ```
+
+2. `reveal_type()` calls have to stay in a single line, without anything else. This limitation comes from using [`eval` mode in AST parsing](https://docs.python.org/3/library/ast.html#ast.Expression).
 
 ## History
 
