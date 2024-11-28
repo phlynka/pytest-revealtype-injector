@@ -122,6 +122,7 @@ class _TypeCheckerAdapter(TypeCheckerAdapterBase):
     @classmethod
     def run_typechecker_on(cls, paths: Iterable[pathlib.Path]) -> None:
         this_file = pathlib.Path(__file__).resolve()
+        # TODO Specify mypy config location through pytest config
         mypy_ini = this_file.parent.parent / "rttest-mypy.ini"
         if not mypy_ini.is_file():
             raise FileNotFoundError(f"mypy config not found at {mypy_ini}")
@@ -130,10 +131,8 @@ class _TypeCheckerAdapter(TypeCheckerAdapterBase):
             f"--config-file={mypy_ini}",
         ]
         mypy_args.extend(str(p) for p in paths)
-        # print(f"Running mypy with args: {mypy_args}")
-        # mypy 1.11.0 UNCONDITIONALLY exits with error when
-        # output format is json, there is no point checking
-        # exit code for problems
+
+        # TODO Fail if mypy returns non-zero exit code
         stdout, _, _ = mypy.api.run(mypy_args)
 
         # So-called mypy json output is merely a line-by-line

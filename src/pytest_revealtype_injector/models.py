@@ -66,7 +66,7 @@ class NameCollectorBase(ast.NodeTransformer):
         node.slice = cast("ast.expr", self.visit(node.slice))
 
         # When type reference is a stub-only specialized class
-        # which don't have runtime support (lxml classes have
+        # which don't have runtime support (e.g. lxml classes have
         # no __class_getitem__), concede by verifying
         # non-subscripted type.
         try:
@@ -84,7 +84,7 @@ class NameCollectorBase(ast.NodeTransformer):
 
 class TypeCheckerAdapterBase:
     id: ClassVar[str]
-    # {('file.py', 10): ('var_name', '_Element'), ...}
+    # {('file.py', 10): ('var_name', 'list[str]'), ...}
     typechecker_result: ClassVar[dict[FilePos, VarType]]
     _type_mesg_re: ClassVar[re.Pattern[str]]
 

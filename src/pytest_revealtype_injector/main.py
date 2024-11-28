@@ -32,10 +32,11 @@ class RevealTypeExtractor(ast.NodeVisitor):
     target = None
 
     def visit_Call(self, node: ast.Call) -> Any:
-        # Condition no more holds, as we allow importing reveal_type() or typing
-        # module as any name
-        # func_name = node.func
-        # if isinstance(func_name, ast.Name) and func_name.id == "reveal_type":
+        # HACK node.func is not necessarily "reveal_type" as we allow
+        # "import as" syntax. We just assume the outmost call is
+        # reveal_type(), and never descend into recursive ast.Call nodes.
+        # IDEA Is it possible to retrieve the function name from
+        # pytest_pyfunc_call() hook and store it in stash somewhere?
         self.target = node.args[0]
         return self.generic_visit(node)
 
@@ -46,6 +47,8 @@ def _get_var_name(frame: inspect.Traceback) -> str | None:
     code = ctxt[idx].strip()
 
     walker = RevealTypeExtractor()
+    # TODO Use 'exec' mode which results in more complex AST but doesn't impose
+    # as much restriction on test code as 'eval' mode does.
     walker.visit(ast.parse(code, mode="eval"))
     assert walker.target is not None
     return ast.get_source_segment(code, walker.target)

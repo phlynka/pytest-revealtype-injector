@@ -45,8 +45,10 @@ class _TypeCheckerAdapter(TypeCheckerAdapterBase):
     def run_typechecker_on(cls, paths: Iterable[pathlib.Path]) -> None:
         if (prog_path := shutil.which("pyright")) is None:
             raise FileNotFoundError("Pyright is required to run test suite")
+        # TODO Specify pyright config location through pytest config
         cmd = [prog_path, "--outputjson"]
         cmd.extend(str(p) for p in paths)
+        # TODO Fail if pyright returns non-zero exit code
         proc = subprocess.run(cmd, capture_output=True)
         report = json.loads(proc.stdout)
 

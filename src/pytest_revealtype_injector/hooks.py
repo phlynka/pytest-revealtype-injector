@@ -41,5 +41,7 @@ def pytest_pyfunc_call(pyfuncitem: pytest.Function) -> None:
 
 def pytest_collection_finish(session: pytest.Session) -> None:
     files = {i.path for i in session.items}
+    # TODO Automatic loading of typechecker adapters, and
+    # selectively disable them based on pytest config
     for adapter in (pyright_.adapter, mypy_.adapter):
         adapter.run_typechecker_on(files)
