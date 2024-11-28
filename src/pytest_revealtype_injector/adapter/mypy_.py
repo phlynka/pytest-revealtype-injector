@@ -5,12 +5,12 @@ import pathlib
 import re
 from collections.abc import (
     Iterable,
-    TypedDict,
 )
 from typing import (
     Any,
     ForwardRef,
     Literal,
+    TypedDict,
     cast,
 )
 

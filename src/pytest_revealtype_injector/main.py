@@ -3,14 +3,26 @@ import inspect
 import logging
 import pathlib
 import sys
-import typing as _t
+from typing import (
+    Any,
+    ForwardRef,
+    TypeVar,
+)
 
-from typeguard import TypeCheckError, TypeCheckMemo, check_type_internal
+from typeguard import (
+    TypeCheckError,
+    TypeCheckMemo,
+    check_type_internal,
+)
 
 from .adapter import mypy_, pyright_
-from .models import FilePos, TypeCheckerError, VarType
+from .models import (
+    FilePos,
+    TypeCheckerError,
+    VarType,
+)
 
-_T = _t.TypeVar("_T")
+_T = TypeVar("_T")
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.WARN)
@@ -19,7 +31,7 @@ _logger.setLevel(logging.WARN)
 class RevealTypeExtractor(ast.NodeVisitor):
     target = None
 
-    def visit_Call(self, node: ast.Call) -> _t.Any:
+    def visit_Call(self, node: ast.Call) -> Any:
         # Condition no more holds, as we allow importing reveal_type() or typing
         # module as any name
         # func_name = node.func
@@ -111,7 +123,7 @@ def reveal_type_wrapper(var: _T) -> _T:
             walker = adapter.create_collector(globalns, localns)
             new_ast = walker.visit(ref_ast)
             if walker.modified:
-                ref = _t.ForwardRef(ast.unparse(new_ast))
+                ref = ForwardRef(ast.unparse(new_ast))
             memo = TypeCheckMemo(globalns, localns | walker.collected)
         else:
             memo = TypeCheckMemo(globalns, localns)

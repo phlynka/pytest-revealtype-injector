@@ -4,9 +4,20 @@ import pathlib
 import re
 import shutil
 import subprocess
-import typing as _t
+from collections.abc import (
+    Iterable,
+)
+from typing import (
+    Any,
+    ForwardRef,
+)
 
-from ..models import FilePos, NameCollectorBase, TypeCheckerAdapterBase, VarType
+from ..models import (
+    FilePos,
+    NameCollectorBase,
+    TypeCheckerAdapterBase,
+    VarType,
+)
 
 
 class _NameCollector(NameCollectorBase):
@@ -31,7 +42,7 @@ class _TypeCheckerAdapter(TypeCheckerAdapterBase):
     _type_mesg_re = re.compile('^Type of "(?P<var>.+?)" is "(?P<type>.+?)"$')
 
     @classmethod
-    def run_typechecker_on(cls, paths: _t.Iterable[pathlib.Path]) -> None:
+    def run_typechecker_on(cls, paths: Iterable[pathlib.Path]) -> None:
         if (prog_path := shutil.which("pyright")) is None:
             raise FileNotFoundError("Pyright is required to run test suite")
         cmd = [prog_path, "--outputjson"]
@@ -49,11 +60,11 @@ class _TypeCheckerAdapter(TypeCheckerAdapterBase):
             if (m := cls._type_mesg_re.match(diag["message"])) is None:
                 continue
             pos = FilePos(filename, lineno)
-            cls.typechecker_result[pos] = VarType(m["var"], _t.ForwardRef(m["type"]))
+            cls.typechecker_result[pos] = VarType(m["var"], ForwardRef(m["type"]))
 
     @classmethod
     def create_collector(
-        cls, globalns: dict[str, _t.Any], localns: dict[str, _t.Any]
+        cls, globalns: dict[str, Any], localns: dict[str, Any]
     ) -> _NameCollector:
         return _NameCollector(globalns, localns)
 
