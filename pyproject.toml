@@ -64,6 +64,7 @@ name = 'pytest_revealtype_injector'
 [tool.pyright]
 typeCheckingMode = 'strict'
 enableTypeIgnoreComments = false
+deprecateTypingAliases = true
 
 [tool.mypy]
 mypy_path = "$MYPY_CONFIG_FILE_DIR/src"

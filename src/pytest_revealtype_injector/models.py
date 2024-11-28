@@ -85,7 +85,7 @@ class NameCollectorBase(ast.NodeTransformer):
 
 
 class TypeCheckerAdapterBase:
-    enabled: ClassVar[bool] = True
+    enabled: bool = True
     config_file: ClassVar[pathlib.Path | None] = None
     # Subclasses need to specify default values for below
     id: ClassVar[str]

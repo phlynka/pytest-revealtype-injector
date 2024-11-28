@@ -90,7 +90,7 @@ def revealtype_injector(var: _T) -> _T:
     """
     # As a wrapper of typeguard.check_type_interal(),
     # get data from my caller, not mine
-    caller_frame = sys._getframe(1)
+    caller_frame = sys._getframe(1)  # pyright: ignore[reportPrivateUsage]
     caller = inspect.getframeinfo(caller_frame)
     var_name = _get_var_name(caller)
     pos = FilePos(pathlib.Path(caller.filename).name, caller.lineno)
