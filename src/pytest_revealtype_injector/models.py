@@ -14,6 +14,8 @@ from typing import (
     cast,
 )
 
+import pytest
+
 
 class FilePos(NamedTuple):
     file: str
@@ -83,6 +85,9 @@ class NameCollectorBase(ast.NodeTransformer):
 
 
 class TypeCheckerAdapterBase:
+    enabled: ClassVar[bool] = True
+    config_file: ClassVar[pathlib.Path | None] = None
+    # Subclasses need to specify default values for below
     id: ClassVar[str]
     # {('file.py', 10): ('var_name', 'list[str]'), ...}
     typechecker_result: ClassVar[dict[FilePos, VarType]]
@@ -96,3 +101,6 @@ class TypeCheckerAdapterBase:
     def create_collector(
         cls, globalns: dict[str, Any], localns: dict[str, Any]
     ) -> NameCollectorBase: ...
+    @classmethod
+    @abc.abstractmethod
+    def set_config_file(cls, config: pytest.Config) -> None: ...

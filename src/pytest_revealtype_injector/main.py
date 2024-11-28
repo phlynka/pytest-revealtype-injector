@@ -101,6 +101,8 @@ def reveal_type_wrapper(var: _T) -> _T:
     localns = caller_frame.f_locals
 
     for adapter in (pyright_.adapter, mypy_.adapter):
+        if not adapter.enabled:
+            continue
         try:
             tc_result = adapter.typechecker_result[pos]
         except KeyError as e:

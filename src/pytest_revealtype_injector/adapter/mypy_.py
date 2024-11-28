@@ -1,6 +1,7 @@
 import ast
 import importlib
 import json
+import logging
 import pathlib
 import re
 from collections.abc import (
@@ -15,6 +16,7 @@ from typing import (
 )
 
 import mypy.api
+import pytest
 
 from ..models import (
     FilePos,
@@ -23,6 +25,9 @@ from ..models import (
     TypeCheckerError,
     VarType,
 )
+
+_logger = logging.getLogger(__name__)
+_logger.setLevel(logging.INFO)
 
 
 # There are "column", "hint" and "code" fields for error
@@ -121,15 +126,15 @@ class _TypeCheckerAdapter(TypeCheckerAdapterBase):
 
     @classmethod
     def run_typechecker_on(cls, paths: Iterable[pathlib.Path]) -> None:
-        this_file = pathlib.Path(__file__).resolve()
-        # TODO Specify mypy config location through pytest config
-        mypy_ini = this_file.parent.parent / "rttest-mypy.ini"
-        if not mypy_ini.is_file():
-            raise FileNotFoundError(f"mypy config not found at {mypy_ini}")
         mypy_args = [
             "--output=json",
-            f"--config-file={mypy_ini}",
         ]
+        if cls.config_file is not None:
+            cfg_str = str(cls.config_file)
+            if cfg_str == ".":  # see set_config_file() below
+                cfg_str = ""
+            mypy_args.append(f"--config-file={cfg_str}")
+
         mypy_args.extend(str(p) for p in paths)
 
         # TODO Fail if mypy returns non-zero exit code
@@ -167,6 +172,32 @@ class _TypeCheckerAdapter(TypeCheckerAdapterBase):
         cls, globalns: dict[str, Any], localns: dict[str, Any]
     ) -> _NameCollector:
         return _NameCollector(globalns, localns)
+
+    @classmethod
+    def set_config_file(cls, config: pytest.Config) -> None:
+        # Mypy doesn't have a default config file
+        if (path_str := config.option.revealtype_mypy_config) is None:
+            _logger.info("Using default mypy configuration")
+            return
+
+        # HACK: when path_str is empty string, use no config file
+        # ('mypy --config-file=')
+        # Take advantage of pathlib.Path() behavior that empty string
+        # is treated as current directory, which is not a valid
+        # config file name, while satisfying typing constraint
+        if not path_str:
+            cls.config_file = pathlib.Path()
+            return
+
+        relpath = pathlib.Path(path_str)
+        if relpath.is_absolute():
+            raise ValueError(f"Path '{path_str}' must be relative to pytest rootdir")
+        result = (config.rootpath / relpath).resolve()
+        if not result.exists():
+            raise FileNotFoundError(f"Path '{result}' not found")
+
+        _logger.info(f"Using mypy configuration file at {result}")
+        cls.config_file = result
 
 
 adapter = _TypeCheckerAdapter()

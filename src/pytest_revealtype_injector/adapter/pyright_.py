@@ -1,5 +1,6 @@
 import ast
 import json
+import logging
 import pathlib
 import re
 import shutil
@@ -12,12 +13,17 @@ from typing import (
     ForwardRef,
 )
 
+import pytest
+
 from ..models import (
     FilePos,
     NameCollectorBase,
     TypeCheckerAdapterBase,
     VarType,
 )
+
+_logger = logging.getLogger(__name__)
+_logger.setLevel(logging.INFO)
 
 
 class _NameCollector(NameCollectorBase):
@@ -69,6 +75,22 @@ class _TypeCheckerAdapter(TypeCheckerAdapterBase):
         cls, globalns: dict[str, Any], localns: dict[str, Any]
     ) -> _NameCollector:
         return _NameCollector(globalns, localns)
+
+    @classmethod
+    def set_config_file(cls, config: pytest.Config) -> None:
+        if (path_str := config.option.revealtype_pyright_config) is None:
+            _logger.info("Using default pyright configuration")
+            return
+
+        relpath = pathlib.Path(path_str)
+        if relpath.is_absolute():
+            raise ValueError(f"Path '{path_str}' must be relative to pytest rootdir")
+        result = (config.rootpath / relpath).resolve()
+        if not result.exists():
+            raise FileNotFoundError(f"Path '{result}' not found")
+
+        _logger.info(f"Using pyright configuration file at {result}")
+        cls.config_file = result
 
 
 adapter = _TypeCheckerAdapter()
