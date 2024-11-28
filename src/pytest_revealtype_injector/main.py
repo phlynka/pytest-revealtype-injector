@@ -38,7 +38,7 @@ class RevealTypeExtractor(ast.NodeVisitor):
         # IDEA Is it possible to retrieve the function name from
         # pytest_pyfunc_call() hook and store it in stash somewhere?
         self.target = node.args[0]
-        return self.generic_visit(node)
+        return node
 
 
 def _get_var_name(frame: inspect.Traceback) -> str | None:
