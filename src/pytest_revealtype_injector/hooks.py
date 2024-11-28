@@ -6,7 +6,7 @@ import logging
 import pytest
 
 from .adapter import mypy_, pyright_
-from .main import reveal_type_wrapper
+from .main import revealtype_injector
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
@@ -24,9 +24,9 @@ def pytest_pyfunc_call(pyfuncitem: pytest.Function) -> None:
                 "typing",
                 "typing_extensions",
             }:
-                setattr(pyfuncitem.module, name, reveal_type_wrapper)
+                setattr(pyfuncitem.module, name, revealtype_injector)
                 _logger.info(
-                    f"Replaced {name}() from global import with {reveal_type_wrapper}"
+                    f"Replaced {name}() from global import with {revealtype_injector}"
                 )
                 continue
 
@@ -34,8 +34,8 @@ def pytest_pyfunc_call(pyfuncitem: pytest.Function) -> None:
             if item.__name__ not in {"typing", "typing_extensions"}:
                 continue
             assert hasattr(item, "reveal_type")
-            setattr(item, "reveal_type", reveal_type_wrapper)
-            _logger.info(f"Replaced {name}.reveal_type() with {reveal_type_wrapper}")
+            setattr(item, "reveal_type", revealtype_injector)
+            _logger.info(f"Replaced {name}.reveal_type() with {revealtype_injector}")
             continue
 
 

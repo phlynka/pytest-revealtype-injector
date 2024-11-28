@@ -54,23 +54,21 @@ def _get_var_name(frame: inspect.Traceback) -> str | None:
     return ast.get_source_segment(code, walker.target)
 
 
-def reveal_type_wrapper(var: _T) -> _T:
-    """Replacement of `reveal_type()` that matches static
-    and runtime result
+def revealtype_injector(var: _T) -> _T:
+    """Replacement of `reveal_type()` that matches static and runtime type
+    checking result
 
-    This function is intended as a drop-in replacement of
-    `reveal_type()`, replacing official one from Python 3.11
-    or `typing_extensions` module. Under the hook, it uses
-    `typeguard` to get runtime variable type, and compare it
-    with static type checker results for coherence.
+    This function is intended as a drop-in replacement of `reveal_type()` from
+    Python 3.11 or `typing_extensions` module. Under the hook, it uses
+    `typeguard` to get runtime variable type, and compare it with static type
+    checker results for coherence.
 
     Usage
     -----
-    No special handling is required. Just import `reveal_type`
-    as usual in pytest test functions, and it will be replaced
-    with this function behind the scene. However, since
-    `reveal_type()` is not available in Python 3.10 or earlier,
-    you need to import it conditionally, like this:
+    No special handling is required. Just import `reveal_type` as usual in
+    pytest test functions, and it will be replaced with this function behind the
+    scene. However, since `reveal_type()` is not available in Python 3.10 or
+    earlier, you need to import it conditionally, like this:
 
         ```python
         if sys.version_info >= (3, 11):
