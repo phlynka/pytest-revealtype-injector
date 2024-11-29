@@ -45,15 +45,6 @@ class TypeCheckerError(Exception):
             return self.args[0]
 
 
-class FuncSignatureError(Exception):
-    def __init__(self, message: str, funcname: str) -> None:
-        super().__init__(message)
-        self._func = funcname
-
-    def __str__(self) -> str:
-        return "{}(): {}".format(self._func, self.args[0])
-
-
 class NameCollectorBase(ast.NodeTransformer):
     def __init__(
         self,
