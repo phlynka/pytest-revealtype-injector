@@ -42,7 +42,7 @@ class TypeCheckerError(Exception):
                 self.args[0],
             )
         else:
-            return self.args[0]
+            return str(self.args[0])
 
 
 class NameCollectorBase(ast.NodeTransformer):
