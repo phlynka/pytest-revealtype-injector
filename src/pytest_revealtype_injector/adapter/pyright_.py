@@ -19,6 +19,7 @@ from ..models import (
     FilePos,
     NameCollectorBase,
     TypeCheckerAdapterBase,
+    TypeCheckerError,
     VarType,
 )
 
@@ -49,24 +50,37 @@ class _TypeCheckerAdapter(TypeCheckerAdapterBase):
 
     @classmethod
     def run_typechecker_on(cls, paths: Iterable[pathlib.Path]) -> None:
-        if (prog_path := shutil.which("pyright")) is None:
+        cmd: list[str] = []
+        if shutil.which("pyright") is not None:
+            cmd.append('pyright')
+        elif shutil.which("npx") is not None:
+            cmd.extend(['npx', 'pyright'])
+        else:
             raise FileNotFoundError("Pyright is required to run test suite")
-        cmd = [
-            prog_path,
-            "--outputjson",
-        ]
+
+        cmd.append('--outputjson')
         if cls.config_file is not None:
             cmd.extend(["--project", str(cls.config_file)])
         cmd.extend(str(p) for p in paths)
-        # TODO Fail if pyright returns non-zero exit code
-        proc = subprocess.run(cmd, capture_output=True)
-        report = json.loads(proc.stdout)
 
+        proc = subprocess.run(cmd, capture_output=True)
+        if len(proc.stderr):
+            raise TypeCheckerError(proc.stderr.decode(), None, None)
+
+        # TODO Pyright json schema validation
+        report = json.loads(proc.stdout)
+        if proc.returncode:
+            for diag in report["generalDiagnostics"]:
+                if diag["severity"] != "error":
+                    continue
+                # Pyright report lineno is 0-based,
+                # OTOH python frame lineno is 1-based
+                lineno = diag["range"]["start"]["line"] + 1
+                filename = pathlib.Path(diag["file"]).name
+                raise TypeCheckerError(diag["message"], filename, lineno)
         for diag in report["generalDiagnostics"]:
             if diag["severity"] != "information":
                 continue
-            # Pyright report lineno is 0-based
-            # OTOH python frame lineno is 1-based
             lineno = diag["range"]["start"]["line"] + 1
             filename = pathlib.Path(diag["file"]).name
             if (m := cls._type_mesg_re.match(diag["message"])) is None:

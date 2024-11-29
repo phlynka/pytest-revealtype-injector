@@ -30,13 +30,14 @@ _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
 
 
-# There are "column", "hint" and "code" fields for error
-# messages, but not in reveal_type() output
 class _MypyDiagObj(TypedDict):
     file: str
     line: int
-    severity: Literal["note", "warning", "error"]
+    column: int
     message: str
+    hint: str | None
+    code: str
+    severity: Literal["note", "warning", "error"]
 
 
 class _NameCollector(NameCollectorBase):
@@ -137,22 +138,27 @@ class _TypeCheckerAdapter(TypeCheckerAdapterBase):
 
         mypy_args.extend(str(p) for p in paths)
 
-        # TODO Fail if mypy returns non-zero exit code
-        stdout, _, _ = mypy.api.run(mypy_args)
+        stdout, stderr, returncode = mypy.api.run(mypy_args)
+
+        # fatal error, before evaluation happens
+        # mypy prints text output to stderr, not json
+        if stderr:
+            raise TypeCheckerError(stderr, None, None)
 
         # So-called mypy json output is merely a line-by-line
         # transformation of plain text output into json object
         for line in stdout.splitlines():
-            if not line.startswith("{"):
-                continue
-            # If it fails parsing data, json must be containing
-            # multiline error hint, just let it KABOOM
-            diag: _MypyDiagObj = json.loads(line)
+            # TODO Mypy json schema validation
+            diag = cast(_MypyDiagObj, json.loads(line))
             filename = pathlib.Path(diag["file"]).name
             pos = FilePos(filename, diag["line"])
             if diag["severity"] != "note":
                 raise TypeCheckerError(
-                    "Mypy {}: {}".format(diag["severity"], diag["message"]),
+                    "Mypy {} with exit code {}: {}".format(
+                        diag["severity"],
+                        returncode,
+                        diag["message"]
+                    ),
                     diag["file"],
                     diag["line"],
                 )

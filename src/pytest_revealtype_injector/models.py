@@ -28,13 +28,21 @@ class VarType(NamedTuple):
 
 
 class TypeCheckerError(Exception):
-    def __init__(self, message: str, filename: str, lineno: int) -> None:
+    # Can be None when type checker dies before any code evaluation
+    def __init__(self, message: str, filename: str | None, lineno: int | None) -> None:
         super().__init__(message)
         self._filename = filename
         self._lineno = lineno
 
     def __str__(self) -> str:
-        return f'"{self._filename}" line {self._lineno}: {self.args[0]}'
+        if self._filename:
+            return '"{}"{}: {}'.format(
+                self._filename,
+                " line " + str(self._lineno) if self._lineno else "",
+                self.args[0],
+            )
+        else:
+            return self.args[0]
 
 
 class FuncSignatureError(Exception):
