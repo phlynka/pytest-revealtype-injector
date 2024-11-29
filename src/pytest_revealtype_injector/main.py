@@ -15,7 +15,7 @@ from typeguard import (
     check_type_internal,
 )
 
-from .adapter import mypy_, pyright_
+from . import adapter
 from .models import (
     FilePos,
     TypeCheckerError,
@@ -98,14 +98,14 @@ def revealtype_injector(var: _T) -> _T:
     globalns = caller_frame.f_globals
     localns = caller_frame.f_locals
 
-    for adapter in (pyright_.adapter, mypy_.adapter):
-        if not adapter.enabled:
+    for adp in adapter.discovery():
+        if not adp.enabled:
             continue
         try:
-            tc_result = adapter.typechecker_result[pos]
+            tc_result = adp.typechecker_result[pos]
         except KeyError as e:
             raise TypeCheckerError(
-                f"No inferred type from {adapter.id}", pos.file, pos.lineno
+                f"No inferred type from {adp.id}", pos.file, pos.lineno
             ) from e
 
         if tc_result.var:  # Only pyright has this extra protection
@@ -116,14 +116,14 @@ def revealtype_injector(var: _T) -> _T:
                     pos.lineno,
                 )
         else:
-            adapter.typechecker_result[pos] = VarType(var_name, tc_result.type)
+            adp.typechecker_result[pos] = VarType(var_name, tc_result.type)
 
         ref = tc_result.type
         try:
             _ = eval(ref.__forward_arg__, globalns, localns)
         except (TypeError, NameError):
             ref_ast = ast.parse(ref.__forward_arg__, mode="eval")
-            walker = adapter.create_collector(globalns, localns)
+            walker = adp.create_collector(globalns, localns)
             new_ast = walker.visit(ref_ast)
             if walker.modified:
                 ref = ForwardRef(ast.unparse(new_ast))
@@ -134,7 +134,7 @@ def revealtype_injector(var: _T) -> _T:
         try:
             check_type_internal(var, ref, memo)
         except TypeCheckError as e:
-            e.args = (f"({adapter.id}) " + e.args[0],) + e.args[1:]
+            e.args = (f"({adp.id}) " + e.args[0],) + e.args[1:]
             raise
 
     return var

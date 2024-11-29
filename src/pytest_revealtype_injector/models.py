@@ -83,7 +83,7 @@ class NameCollectorBase(ast.NodeTransformer):
             return node
 
 
-class TypeCheckerAdapterBase:
+class TypeCheckerAdapter:
     enabled: bool = True
     config_file: ClassVar[pathlib.Path | None] = None
     # Subclasses need to specify default values for below
@@ -103,3 +103,6 @@ class TypeCheckerAdapterBase:
     @classmethod
     @abc.abstractmethod
     def set_config_file(cls, config: pytest.Config) -> None: ...
+    @staticmethod
+    @abc.abstractmethod
+    def add_pytest_option(group: pytest.OptionGroup) -> None: ...

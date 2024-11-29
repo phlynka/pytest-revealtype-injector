@@ -5,7 +5,7 @@ import logging
 
 import pytest
 
-from .adapter import mypy_, pyright_
+from . import adapter
 from .main import revealtype_injector
 
 _logger = logging.getLogger(__name__)
@@ -41,11 +41,9 @@ def pytest_pyfunc_call(pyfuncitem: pytest.Function) -> None:
 
 def pytest_collection_finish(session: pytest.Session) -> None:
     files = {i.path for i in session.items}
-    # TODO Automatic loading of typechecker adapters, and
-    # selectively disable them based on pytest config
-    for adapter in {pyright_.adapter, mypy_.adapter}:
-        if adapter.enabled:
-            adapter.run_typechecker_on(files)
+    for adp in adapter.discovery():
+        if adp.enabled:
+            adp.run_typechecker_on(files)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -53,34 +51,24 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         "revealtype-injector",
         description="Type checker related options for revealtype-injector",
     )
+    adapters = adapter.discovery()
+    choices = tuple(adp.id for adp in adapters)
     group.addoption(
         "--revealtype-disable-adapter",
         type=str,
-        choices=("mypy", "pyright"),
+        choices=choices,
         default=None,
         help="Disable this type checker when using revealtype-injector plugin",
     )
-    group.addoption(
-        "--revealtype-mypy-config",
-        type=str,
-        default=None,
-        help="Mypy configuration file, path is relative to pytest rootdir. "
-        "If unspecified, use mypy default behavior",
-    )
-    group.addoption(
-        "--revealtype-pyright-config",
-        type=str,
-        default=None,
-        help="Pyright configuration file, path is relative to pytest rootdir. "
-        "If unspecified, use pyright default behavior",
-    )
+    for adp in adapters:
+        adp.add_pytest_option(group)
 
 
 def pytest_configure(config: pytest.Config) -> None:
-    enabled_adapters = {mypy_.adapter, pyright_.adapter}
-
-    for adp in enabled_adapters:
+    # Forget config stash, it can't store collection of unserialized objects
+    for adp in adapter.discovery():
         if config.option.revealtype_disable_adapter == adp.id:
             adp.enabled = False
-        if adp.enabled:
+            _logger.info(f"Disable {adp.id} adapter based on command line option")
+        else:
             adp.set_config_file(config)

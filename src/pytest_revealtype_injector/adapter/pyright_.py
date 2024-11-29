@@ -18,7 +18,7 @@ import pytest
 from ..models import (
     FilePos,
     NameCollectorBase,
-    TypeCheckerAdapterBase,
+    TypeCheckerAdapter,
     TypeCheckerError,
     VarType,
 )
@@ -43,7 +43,7 @@ class _NameCollector(NameCollectorBase):
         return node
 
 
-class _TypeCheckerAdapter(TypeCheckerAdapterBase):
+class _PyrightAdapter(TypeCheckerAdapter):
     id = "pyright"
     typechecker_result = {}
     _type_mesg_re = re.compile('^Type of "(?P<var>.+?)" is "(?P<type>.+?)"$')
@@ -52,13 +52,13 @@ class _TypeCheckerAdapter(TypeCheckerAdapterBase):
     def run_typechecker_on(cls, paths: Iterable[pathlib.Path]) -> None:
         cmd: list[str] = []
         if shutil.which("pyright") is not None:
-            cmd.append('pyright')
+            cmd.append("pyright")
         elif shutil.which("npx") is not None:
-            cmd.extend(['npx', 'pyright'])
+            cmd.extend(["npx", "pyright"])
         else:
             raise FileNotFoundError("Pyright is required to run test suite")
 
-        cmd.append('--outputjson')
+        cmd.append("--outputjson")
         if cls.config_file is not None:
             cmd.extend(["--project", str(cls.config_file)])
         cmd.extend(str(p) for p in paths)
@@ -110,5 +110,15 @@ class _TypeCheckerAdapter(TypeCheckerAdapterBase):
         _logger.info(f"Using pyright configuration file at {result}")
         cls.config_file = result
 
+    @staticmethod
+    def add_pytest_option(group: pytest.OptionGroup) -> None:
+        group.addoption(
+            "--revealtype-pyright-config",
+            type=str,
+            default=None,
+            help="Pyright configuration file, path is relative to pytest rootdir. "
+            "If unspecified, use pyright default behavior",
+        )
 
-adapter = _TypeCheckerAdapter()
+
+adapter = _PyrightAdapter()

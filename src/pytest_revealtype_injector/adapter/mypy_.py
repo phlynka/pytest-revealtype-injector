@@ -21,7 +21,7 @@ import pytest
 from ..models import (
     FilePos,
     NameCollectorBase,
-    TypeCheckerAdapterBase,
+    TypeCheckerAdapter,
     TypeCheckerError,
     VarType,
 )
@@ -120,7 +120,7 @@ class _NameCollector(NameCollectorBase):
         return node
 
 
-class _TypeCheckerAdapter(TypeCheckerAdapterBase):
+class _MypyAdapter(TypeCheckerAdapter):
     id = "mypy"
     typechecker_result = {}
     _type_mesg_re = re.compile(r'^Revealed type is "(?P<type>.+?)"$')
@@ -155,9 +155,7 @@ class _TypeCheckerAdapter(TypeCheckerAdapterBase):
             if diag["severity"] != "note":
                 raise TypeCheckerError(
                     "Mypy {} with exit code {}: {}".format(
-                        diag["severity"],
-                        returncode,
-                        diag["message"]
+                        diag["severity"], returncode, diag["message"]
                     ),
                     diag["file"],
                     diag["line"],
@@ -205,5 +203,15 @@ class _TypeCheckerAdapter(TypeCheckerAdapterBase):
         _logger.info(f"Using mypy configuration file at {result}")
         cls.config_file = result
 
+    @staticmethod
+    def add_pytest_option(group: pytest.OptionGroup) -> None:
+        group.addoption(
+            "--revealtype-mypy-config",
+            type=str,
+            default=None,
+            help="Mypy configuration file, path is relative to pytest rootdir. "
+            "If unspecified, use mypy default behavior",
+        )
 
-adapter = _TypeCheckerAdapter()
+
+adapter = _MypyAdapter()
