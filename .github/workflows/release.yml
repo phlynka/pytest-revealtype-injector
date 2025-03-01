@@ -36,7 +36,7 @@ jobs:
         fetch-depth: 0
 
     - name: Forced version bump
-      uses: python-semantic-release/python-semantic-release@v9.12.0
+      uses: python-semantic-release/python-semantic-release@v9.21.0
       if: inputs.is_forced == 'true'
       id: forced
       with:
@@ -52,7 +52,7 @@ jobs:
         vcs_release: false
 
     - name: Unforced version bump
-      uses: python-semantic-release/python-semantic-release@v9.12.0
+      uses: python-semantic-release/python-semantic-release@v9.21.0
       if: inputs.is_forced == 'false'
       id: unforced
       with:
@@ -110,7 +110,7 @@ jobs:
         path: CHANGELOG.md
         retention-days: 3
 
-    - uses: astral-sh/setup-uv@v4
+    - uses: astral-sh/setup-uv@v5
       with:
         version: "0.5.5"
         enable-cache: true
@@ -178,7 +178,7 @@ jobs:
       with:
         name: changelog
 
-    - uses: actions/attest-build-provenance@v1
+    - uses: actions/attest-build-provenance@v2
       with:
         subject-path: |
           dist/*.whl
