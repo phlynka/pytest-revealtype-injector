@@ -128,9 +128,9 @@ jobs:
         if_true: "https://upload.pypi.org/legacy/"
         if_false: "https://test.pypi.org/legacy/"
 
-    - uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        repository-url: ${{ steps.pypi-url.outputs.value }}
+    # - uses: pypa/gh-action-pypi-publish@release/v1
+    #   with:
+    #     repository-url: ${{ steps.pypi-url.outputs.value }}
 
 
   publish-github:
