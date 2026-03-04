@@ -44,6 +44,7 @@ jobs:
     - name: Install prerequisites
       run: |
         uv tool install hatch
+        uv tool install git-cliff
 
     - name: Forced version bump
       if: inputs.is_forced == 'true'
@@ -53,7 +54,7 @@ jobs:
     - name: Unforced version bump
       if: inputs.is_forced == 'false'
       run: |
-        hatch version $(uvx git-cliff --bumped-version --unreleased | cut -c2-)
+        hatch version $(git-cliff --bumped-version --unreleased | cut -c2-)
 
     - name: Detect final version
       id: semver-result
@@ -87,11 +88,19 @@ jobs:
         git push -u origin
         git push -u origin ${{ steps.semver-result.outputs.tag }}
 
-    - uses: actions/upload-artifact@v6
+    - name: Generate changelog
+      run: |
+        git-cliff --latest -o
+
+    - name: Upload changelog
+      uses: actions/upload-artifact@v6
       with:
         name: changelog
         path: CHANGELOG.md
         retention-days: 3
+
+    - name: Remove changelog
+      run: rm CHANGELOG.md
 
     - name: Build package
       run: uv build
